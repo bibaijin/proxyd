@@ -1,0 +1,27 @@
+version: '2'
+
+services:
+  benchmark:
+    build: .
+    command: /run.sh
+    links:
+      - proxyd
+      - netserver
+
+  proxyd:
+    image: proxyd:build
+    command: /lain/app/benchmark/proxyd.sh
+    expose:
+      - "8080"
+      - "8081"
+    links:
+      - netserver
+    volumes:
+      - ./pprof:/pprof
+
+  netserver:
+    build: .
+    command: netserver -4 -L 0.0.0.0 -D -d
+    expose:
+      - "12865"  # for control connection
+      - "8081"  # for data connection

@@ -1,0 +1,20 @@
+appname: proxyd
+
+build:
+  base: golang:1.8
+  prepare:
+    version: 201704231842
+    script:
+      - apt-get update
+      - apt-get install -y net-tools
+      - cd benchmark/netperf-2.7.0 && ./configure && make && make install
+  script:
+    - mkdir -p $GOPATH/src/github.com/laincloud/proxyd/
+    - cp -rf . $GOPATH/src/github.com/laincloud/proxyd/
+    - cd $GOPATH/src/github.com/laincloud/proxyd/ && go install
+
+release:
+  dest_base: registry.yxapp.xyz/centos:1.0.1
+  copy:
+    - src: $GOPATH/bin/proxyd
+      dest: /proxyd

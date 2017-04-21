@@ -1,0 +1,165 @@
+>>>>>>>>>>>>>>>>>>>>
+TCP_RR > proxy
+>>>>>>>>>>>>>>>>>>>>
+MIGRATED TCP REQUEST/RESPONSE TEST from 0.0.0.0 (0.0.0.0) port 12345 AF_INET to proxyd () port 8081 AF_INET : first burst 0
+Local /Remote
+Socket Size   Request  Resp.   Elapsed  Trans.
+Send   Recv   Size     Size    Time     Rate         
+bytes  Bytes  bytes    bytes   secs.    per sec   
+
+16384  87380  1        1       10.00    9794.50   
+16384  87380 
+Alignment      Offset         RoundTrip  Trans    Throughput
+Local  Remote  Local  Remote  Latency    Rate     10^6bits/s
+Send   Recv    Send   Recv    usec/Tran  per sec  Outbound   Inbound
+    8      0       0      0   102.098   9794.500 0.078     0.078 
+<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>
+TCP_RR > no proxy
+>>>>>>>>>>>>>>>>>>>>
+MIGRATED TCP REQUEST/RESPONSE TEST from 0.0.0.0 (0.0.0.0) port 12345 AF_INET to netserver () port 8081 AF_INET : first burst 0
+Local /Remote
+Socket Size   Request  Resp.   Elapsed  Trans.
+Send   Recv   Size     Size    Time     Rate         
+bytes  Bytes  bytes    bytes   secs.    per sec   
+
+16384  87380  1        1       10.00    13481.77   
+16384  87380 
+Alignment      Offset         RoundTrip  Trans    Throughput
+Local  Remote  Local  Remote  Latency    Rate     10^6bits/s
+Send   Recv    Send   Recv    usec/Tran  per sec  Outbound   Inbound
+    8      0       0      0   74.174   13481.773 0.108     0.108 
+<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>
+TCP_STREAM > proxy
+>>>>>>>>>>>>>>>>>>>>
+MIGRATED TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 12345 AF_INET to proxyd () port 8081 AF_INET
+Recv   Send    Send                          
+Socket Socket  Message  Elapsed              
+Size   Size    Size     Time     Throughput  
+bytes  bytes   bytes    secs.    10^6bits/sec  
+
+ 87380  16384  16384    10.00    9595.58   
+
+Alignment      Offset         Bytes    Bytes       Sends   Bytes    Recvs
+Local  Remote  Local  Remote  Xfered   Per                 Per
+Send   Recv    Send   Recv             Send (avg)          Recv (avg)
+    8       8      0       0 11995693056  16384.00    732159   62487.33 191970
+
+Maximum
+Segment
+Size (bytes)
+  1448
+<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>
+TCP_STREAM > no proxy
+>>>>>>>>>>>>>>>>>>>>
+MIGRATED TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 12345 AF_INET to netserver () port 8081 AF_INET
+Recv   Send    Send                          
+Socket Socket  Message  Elapsed              
+Size   Size    Size     Time     Throughput  
+bytes  bytes   bytes    secs.    10^6bits/sec  
+
+ 87380  16384  16384    10.00    13876.60   
+
+Alignment      Offset         Bytes    Bytes       Sends   Bytes    Recvs
+Local  Remote  Local  Remote  Xfered   Per                 Per
+Send   Recv    Send   Recv             Send (avg)          Recv (avg)
+    8       8      0       0 17346265088  16384.00    1058732   30040.10 577437
+
+Maximum
+Segment
+Size (bytes)
+  1448
+<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>
+TCP_MAERTS > proxy
+>>>>>>>>>>>>>>>>>>>>
+MIGRATED TCP MAERTS TEST from 0.0.0.0 (0.0.0.0) port 12345 AF_INET to proxyd () port 8081 AF_INET
+Recv   Send    Send                          
+Socket Socket  Message  Elapsed              
+Size   Size    Size     Time     Throughput  
+bytes  bytes   bytes    secs.    10^6bits/sec  
+
+ 87380  16384  16384    10.00    7043.87   
+
+Alignment      Offset         Bytes    Bytes       Recvs   Bytes    Sends
+Local  Remote  Local  Remote  Xfered   Per                 Per
+Recv   Send    Recv   Send             Recv (avg)          Send (avg)
+    8       8      0       0 8805945904  54402.35    161867   16384.00 538030
+
+Maximum
+Segment
+Size (bytes)
+  1448
+<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>
+TCP_MAERTS > no proxy
+>>>>>>>>>>>>>>>>>>>>
+MIGRATED TCP MAERTS TEST from 0.0.0.0 (0.0.0.0) port 12345 AF_INET to netserver () port 8081 AF_INET
+Recv   Send    Send                          
+Socket Socket  Message  Elapsed              
+Size   Size    Size     Time     Throughput  
+bytes  bytes   bytes    secs.    10^6bits/sec  
+
+ 87380  16384  16384    10.00    12739.83   
+
+Alignment      Offset         Bytes    Bytes       Recvs   Bytes    Sends
+Local  Remote  Local  Remote  Xfered   Per                 Per
+Recv   Send    Recv   Send             Recv (avg)          Send (avg)
+    8       8      0       0 15925411840  20658.26    770898   16384.00 972010
+
+Maximum
+Segment
+Size (bytes)
+  1448
+<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>
+TCP_SENDFILE > proxy
+>>>>>>>>>>>>>>>>>>>>
+TCP SENDFILE TEST from 0.0.0.0 (0.0.0.0) port 12345 AF_INET to proxyd () port 8081 AF_INET
+Recv   Send    Send                          
+Socket Socket  Message  Elapsed              
+Size   Size    Size     Time     Throughput  
+bytes  bytes   bytes    secs.    10^6bits/sec  
+
+ 87380  16384  16384    10.00    11304.63   
+
+Alignment      Offset         Bytes    Bytes       Sends   Bytes    Recvs
+Local  Remote  Local  Remote  Xfered   Per                 Per
+Send   Recv    Send   Recv             Send (avg)          Recv (avg)
+    8       8      0       0 1.414e+10  16384.00    862850   60103.97 235208
+
+Maximum
+Segment
+Size (bytes)
+  1448
+<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>
+TCP_SENDFILE > no proxy
+>>>>>>>>>>>>>>>>>>>>
+TCP SENDFILE TEST from 0.0.0.0 (0.0.0.0) port 12345 AF_INET to netserver () port 8081 AF_INET
+Recv   Send    Send                          
+Socket Socket  Message  Elapsed              
+Size   Size    Size     Time     Throughput  
+bytes  bytes   bytes    secs.    10^6bits/sec  
+
+ 87380  16384  16384    10.00    14197.68   
+
+Alignment      Offset         Bytes    Bytes       Sends   Bytes    Recvs
+Local  Remote  Local  Remote  Xfered   Per                 Per
+Send   Recv    Send   Recv             Send (avg)          Recv (avg)
+    8       8      0       0 1.775e+10  16384.00    1083305   15429.08 1150352
+
+Maximum
+Segment
+Size (bytes)
+  1448
+<<<<<<<<<<<<<<<<<<<<
