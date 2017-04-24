@@ -11,8 +11,9 @@
 
 条件 \ 指标 | TCP_RR | TCP_STREAM | TCP_MAERTS | TCP_SENDFILE
 ----------- | ------ | ---------- | ---------- | ------------
-有 proxyd | 9795 trans/s | 9596 Mbits/s | 7074 Mbits/s | 11305 Mbits/s
-没有 proxyd | 13482 trans/s | 13877 Mbits/s | 12740 Mbits/s | 14198 Mbits/s
+没有 proxy | 15109 trans/s | 13919 Mbits/s | 13526 Mbits/s | 13098 Mbits/s
+nginx | 7059 trans/s | 10585 Mbits/s | 8897 Mbits/s | 8311 Mbits/s
+proxyd | 8541 trans/s | 11393 Mbits/s | 10568 Mbits/s | 12953 Mbits/s
 
 > - TCP_RR 指 TCP Request/Response 测试:
 >     - trans/s 指 transaction/s，即每秒完成的交易数，即 qps

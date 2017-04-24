@@ -2,26 +2,41 @@ version: '2'
 
 services:
   benchmark:
-    build: .
+    build:
+      context: .
+      dockerfile: netperf.Dockerfile
     command: /run.sh
     links:
-      - proxyd
       - netserver
+      - nginx
+      - proxyd
+
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx.Dockerfile
+    links:
+      - netserver
+    expose:
+      - "8080"  # for control connection
+      - "8081"  # for data connection
 
   proxyd:
     image: proxyd:build
     command: /lain/app/benchmark/proxyd.sh
     expose:
-      - "8080"
-      - "8081"
+      - "8080"  # for control connection
+      - "8081"  # for data connection
     links:
       - netserver
     volumes:
       - ./pprof:/pprof
 
   netserver:
-    build: .
-    command: netserver -4 -L 0.0.0.0 -D -d
+    build:
+      context: .
+      dockerfile: netperf.Dockerfile
+    command: netserver -L 0.0.0.0 -D -d
     expose:
       - "12865"  # for control connection
-      - "8081"  # for data connection
+      - "8081"   # for data connection
