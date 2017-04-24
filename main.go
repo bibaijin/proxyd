@@ -21,17 +21,18 @@ var (
 	errLogger  = log.New(os.Stderr, "ERROR ", LogFlag)
 	infoLogger = log.New(os.Stdout, "INFO ", LogFlag)
 
-	port             = flag.Int("port", 8080, "port to listen")
+	port            = flag.Int("port", 8080, "port to listen")
+	serviceProcType = flag.String("serviceproctype", "worker", "proc type of the service")
+	serviceName     = flag.String("servicename", "", "name of the service")
+	watchAddr       = flag.String("watchaddr", "lainlet.lain:9001", "the address to watch for upstreams")
+	watchHeartbeat  = flag.Int("watchheartbeat", 5, "watch heartbeat interval")
+
 	test             = flag.Bool("test", false, "test mode")
 	upstreams        = flag.String("upstreams", "", "test upstreams")               // 只在 test 模式下使用
 	cpuprofile       = flag.String("cpuprofile", "", "write cpu profile `file`")    // 只在 test 模式下使用
 	memprofile       = flag.String("memprofile", "", "write memory profile `file`") // 只在 test 模式下使用
 	blockProfile     = flag.String("blockprofile", "", "block profile")             // 只在 test 模式下使用
 	blockProfileRate = flag.Int("blockprofilerate", 0, "block profile rate")        // 只在 test 模式下使用
-	watchAddr        = flag.String("watchaddr", "lainlet.lain:9001", "the address to watch for upstreams")
-	watchHeartbeat   = flag.Int("watchheartbeat", 5, "watch heartbeat interval")
-	serviceProcType  = flag.String("serviceproctype", "worker", "proc type of the service")
-	serviceName      = flag.String("servicename", "", "name of the service")
 )
 
 func main() {
