@@ -1,62 +1,67 @@
-# netserver 与 netperf
+# echo-service 与 echo-client
 
-## netserver
+## [echo-service](https://github.com/bibaijin/echo-service)
 
 ```
-appname: netperf-service
+appname: echo-service
 
 build:
-  base: registry.yxapp.xyz/centos:1.0.1
+  base: golang:1.8
   prepare:
-    version: 20170422
-    script:
-      - cd netperf-2.7.0 && ./configure && make && make install
+    version: 201704220021
   script:
-    - echo "Success"
+    - mkdir -p $GOPATH/src/github.com/bibaijin/echo-service/
+    - cp -rf . $GOPATH/src/github.com/bibaijin/echo-service/
+    - cd $GOPATH/src/github.com/bibaijin/echo-service/ && go install
 
-service.netserver:
+release:
+  dest_base: registry.yxapp.xyz/centos:1.0.1
+  copy:
+    - src: $GOPATH/bin/echo-service
+      dest: /echod
+
+service.echod:
   type: worker
-  cmd: netserver -p 8080 -D
+  cmd: /echod
   port: 8080
-  memory: 64M
   portal:
     allow_clients: "**"
-    image: registry.yxapp.xyz/tcp-reverse-proxy:release-1492757416-2266c14a246498038b30f1f53e17b2668f1ff840
-    cmd: /lain/app/tcp-reverse-proxy -port 8080 -serviceproctype worker -serviceprocname netserver
+    image: bibaijin/proxyd:1.0.0
+    cmd: /proxyd -port 8080 -serviceproctype worker -servicename echod
     port: 8080
 ```
 
-> - netperf-service 的源代码在 [https://github.com/bibaijin/netperf-service](https://github.com/bibaijin/netperf-service)。
-> - portal 部分用到了 tcp-reverse-proxy:
->     - image 使用了打包好的 tcp-reverse-proxy image
+> - 其中，portal 用到了 proxyd:
+>     - image 使用了上传到 docker hub 的 proxyd 镜像
 >     - cmd:
 >         - port 默认为 8080
 >         - serviceproctype 默认为 worker
->         - serviceprocname 默认为 ${service_name}，在本例中为 `service.netserver` 中的 `netserver`
+>         - servicename 为 ${service_name}，在本例中为 `service.netserver` 中的 `netserver`
 
-## netperf
+## [echo-client](https://github.com/bibaijin/echo-client)
 
 ```
-appname: netperf-client
+appname: echo-client
 
 build:
-  base: registry.yxapp.xyz/centos:1.0.1
+  base: golang:1.8
   prepare:
-    version: 20170422
-    script:
-      - cd netperf-2.7.0 && ./configure && make && make install
+    version: 201704220054
   script:
-    - cp -f entry.sh /entry.sh
+    - mkdir -p $GOPATH/src/github.com/bibaijin/echo-client/
+    - cp -rf . $GOPATH/src/github.com/bibaijin/echo-client/
+    - cd $GOPATH/src/github.com/bibaijin/echo-client/ && go install
+
+release:
+  dest_base: registry.yxapp.xyz/centos:1.0.1
+  copy:
+    - src: $GOPATH/bin/echo-client
+      dest: /echo
 
 use_services:
-  netperf-service:
-    - netserver
+  echo-service:
+    - echod
 
 proc.worker:
-  cmd: /entry.sh
-  volumes:
-    - /lain/app/benchmark
-  memory: 64M
+  cmd: /echo
 ```
-
-> - netperf-client 的源代码在 [https://github.com/bibaijin/netperf-client](https://github.com/bibaijin/netperf-client)。

@@ -28,10 +28,8 @@ proxyd | 8541 trans/s | 11393 Mbits/s | 10568 Mbits/s | 12953 Mbits/s
 + proxyd 从 lainlet 获取 upstream 信息
 + 目前采用 round-robin 方法，将客户端请求轮流连接到不同的 upstream
 
-## 构建及上传镜像
+## 构建镜像
 
 ```
-lain build  # 构建 proxyd:release 镜像
-lain tag ${LAIN-cluster}  # 打标签为 registry.${LAIN-domain}/proxyd:release-${timestamp}-${git-commit-id}
-lain push ${LAIN-cluster}  # 上传镜像到 registry.${LAIN-domain}
+docker-compose build proxyd
 ```

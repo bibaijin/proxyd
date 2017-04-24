@@ -11,9 +11,6 @@ proxyd 使用 [netperf](http://www.netperf.org/netperf/) 测试。
 
 ```
 cd ${proxyd-project}
-lain build  # 构建 proxyd:build 镜像
-
-cd ${proxyd-project}/benchmark/
 docker-compose build
 docker-compose run --rm benchmark sleep 1s  # 启动依赖服务
 docker-compose run --rm benchmark > stats.txt  # 测试
