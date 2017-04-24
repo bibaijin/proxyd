@@ -31,7 +31,7 @@ var (
 	watchAddr        = flag.String("watchaddr", "lainlet.lain:9001", "the address to watch for upstreams")
 	watchHeartbeat   = flag.Int("watchheartbeat", 5, "watch heartbeat interval")
 	serviceProcType  = flag.String("serviceproctype", "worker", "proc type of the service")
-	serviceProcName  = flag.String("serviceprocname", "", "proc name of the service")
+	serviceName      = flag.String("servicename", "", "name of the service")
 )
 
 func main() {

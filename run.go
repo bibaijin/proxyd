@@ -33,7 +33,7 @@ func Setup(quit <-chan struct{}, done chan<- struct{}) *Watcher {
 		}
 
 		us := strings.Split(*upstreams, ",")
-		watcher := newWatcher(*watchAddr, "", *serviceProcType, *serviceProcName, *watchHeartbeat)
+		watcher := newWatcher(*watchAddr, "", *serviceProcType, *serviceName, *watchHeartbeat)
 		watcher.upstreams = us
 
 		infoLogger.Print("Watcher.Run() done.")
@@ -42,16 +42,16 @@ func Setup(quit <-chan struct{}, done chan<- struct{}) *Watcher {
 		return watcher
 	}
 
-	serviceName := os.Getenv("LAIN_APPNAME")
-	if serviceName == "" {
+	serviceAppName := os.Getenv("LAIN_APPNAME")
+	if serviceAppName == "" {
+		log.Fatal("No ${LAIN_APPNAME} environment variable found.")
+	}
+
+	if *serviceName == "" {
 		log.Fatal("No service name found.")
 	}
 
-	if *serviceProcName == "" {
-		*serviceProcName = serviceName
-	}
-
-	watcher := newWatcher(*watchAddr, serviceName, *serviceProcType, *serviceProcName, *watchHeartbeat)
+	watcher := newWatcher(*watchAddr, serviceAppName, *serviceProcType, *serviceName, *watchHeartbeat)
 	go watcher.Run(quit, done)
 	return watcher
 }
