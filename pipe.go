@@ -3,39 +3,52 @@ package main
 import (
 	"io"
 	"net"
+
+	"github.com/laincloud/proxyd/log"
 )
 
 // pipe 传输数据
-func pipe(clientConn net.Conn, upstreamConn net.Conn, toCloseConns chan<- net.Conn) {
+func pipe(clientConn net.Conn, upstreamConn net.Conn) {
 	clientAddr := clientConn.RemoteAddr()
 	upstreamAddr := upstreamConn.RemoteAddr()
-	infoLogger.Printf("pipe: %s <--> %s start...", clientAddr, upstreamAddr)
+	log.Infof("pipe: %s <--> %s start...", clientAddr, upstreamAddr)
 
 	done := make(chan struct{}, 2)
 
-	go copy(upstreamConn, clientConn, done)
-	go copy(clientConn, upstreamConn, done)
+	go func() {
+		_copy(upstreamConn, clientConn)
+		done <- struct{}{}
+	}()
+
+	go func() {
+		_copy(clientConn, upstreamConn)
+		done <- struct{}{}
+	}()
 
 	<-done
 
-	toCloseConns <- clientConn
-	toCloseConns <- upstreamConn
+	if err := clientConn.Close(); err != nil {
+		log.Errorf("clientConn.Close() failed, error: %s.", err)
+	}
+
+	if err := upstreamConn.Close(); err != nil {
+		log.Errorf("upstreamConn.Close() failed, error: %s.", err)
+	}
 
 	<-done
 
-	infoLogger.Printf("pipe: %s <--> %s done.", clientAddr, upstreamAddr)
+	log.Infof("pipe: %s <--> %s done.", clientAddr, upstreamAddr)
 }
 
-func copy(dst, src net.Conn, done chan<- struct{}) {
+func _copy(dst, src net.Conn) {
 	srcAddr := src.RemoteAddr()
 	dstAddr := dst.RemoteAddr()
-	infoLogger.Printf("copy: %s --> %s start...", srcAddr, dstAddr)
+	log.Infof("copy: %s --> %s start...", srcAddr, dstAddr)
 
 	n, err := io.Copy(dst, src)
 	if err != nil {
-		errLogger.Printf("io.Copy failed, error: %s.", err)
+		log.Errorf("io.Copy() failed, error: %s.", err)
 	}
 
-	infoLogger.Printf("copy: %s --> %s done, written: %d.", srcAddr, dstAddr, n)
-	done <- struct{}{}
+	log.Infof("copy: %s --> %s done, written: %d.", srcAddr, dstAddr, n)
 }
