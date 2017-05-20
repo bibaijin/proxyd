@@ -2,25 +2,21 @@ package main
 
 import (
 	"flag"
-	"log"
 	"net"
 	"os"
 	"os/signal"
 	"strconv"
 	"syscall"
+
+	"github.com/laincloud/proxyd/log"
 )
 
 const (
-	// LogFlag 控制日志的前缀
-	LogFlag = log.LstdFlags | log.Lmicroseconds | log.Lshortfile
 	// MaxConnectionNum 表示最大连接数
 	MaxConnectionNum = 60000
 )
 
 var (
-	errLogger  = log.New(os.Stderr, "ERROR ", LogFlag)
-	infoLogger = log.New(os.Stdout, "INFO ", LogFlag)
-
 	port            = flag.Int("port", 8080, "port to listen")
 	serviceProcType = flag.String("serviceproctype", "worker", "proc type of the service")
 	serviceName     = flag.String("servicename", "", "name of the service")
@@ -56,7 +52,7 @@ func main() {
 		log.Fatalf("net.Listen failed, error: %s.", err)
 	}
 
-	infoLogger.Printf("net.Listen()..., port: %d.", *port)
+	log.Infof("net.Listen()..., port: %d.", *port)
 
 	conns := make(chan net.Conn, MaxConnectionNum)
 	toCloseConns := make(chan net.Conn, 2*MaxConnectionNum)
@@ -68,7 +64,7 @@ func main() {
 
 		// 停止监听端口
 		if err = ln.Close(); err != nil {
-			errLogger.Printf("ln.Close() failed, error: %s.", err)
+			log.Errorf("ln.Close() failed, error: %s.", err)
 		}
 		stopProduceConns <- struct{}{}
 		<-produceConnsDone
@@ -76,7 +72,7 @@ func main() {
 		<-consumeToCloseConnsDone
 
 		Teardown()
-		infoLogger.Print("Shutdown gracefully.")
+		log.Infof("Shutdown gracefully.")
 	}()
 
 	go ProduceConns(ln, conns, toCloseConns, stopProduceConns, produceConnsDone)
@@ -84,5 +80,5 @@ func main() {
 	go ConsumeToCloseConns(toCloseConns, consumeToCloseConnsDone)
 
 	signal := <-quit
-	infoLogger.Printf("Receive a signal: %d, and accept() will shutdown gracefully...", signal)
+	log.Infof("Receive a signal: %d, and accept() will shutdown gracefully...", signal)
 }
