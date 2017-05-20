@@ -2,25 +2,17 @@ package main
 
 import (
 	"flag"
-	"log"
 	"net"
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
-)
 
-const (
-	// LogFlag 控制日志的前缀
-	LogFlag = log.LstdFlags | log.Lmicroseconds | log.Lshortfile
-	// MaxConnectionNum 表示最大连接数
-	MaxConnectionNum = 60000
+	"github.com/laincloud/proxyd/log"
 )
 
 var (
-	errLogger  = log.New(os.Stderr, "ERROR ", LogFlag)
-	infoLogger = log.New(os.Stdout, "INFO ", LogFlag)
-
 	port            = flag.Int("port", 8080, "port to listen")
 	serviceProcType = flag.String("serviceproctype", "worker", "proc type of the service")
 	serviceName     = flag.String("servicename", "", "name of the service")
@@ -35,54 +27,52 @@ var (
 	blockProfileRate = flag.Int("blockprofilerate", 0, "block profile rate")        // 只在 test 模式下使用
 )
 
-func main() {
+func init() {
 	flag.Parse()
+}
 
+func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGTERM)
 
-	stopWatch := make(chan struct{}, 1)
-	stopProduceConns := make(chan struct{}, 1)
+	done := make(chan struct{})
+	defer close(done)
 
-	watchDone := make(chan struct{}, 1)
-	produceConnsDone := make(chan struct{}, 1)
-	consumeConnsDone := make(chan struct{}, 1)
-	consumeToCloseConnsDone := make(chan struct{}, 1)
+	var watcher *Watcher
+	if *test {
+		setup()
+		defer teardown()
+		us := strings.Split(*upstreams, ",")
+		watcher = newWatcher(*watchAddr, "", *serviceProcType, *serviceName, *watchHeartbeat)
+		watcher.upstreams = us
+	} else {
+		serviceAppName := os.Getenv("LAIN_APPNAME")
+		if serviceAppName == "" {
+			log.Fatalf("No ${LAIN_APPNAME} environment variable found.")
+		}
 
-	watcher := Setup(stopWatch, watchDone)
+		if *serviceName == "" {
+			log.Fatalf("No service name found.")
+		}
+		watcher = newWatcher(*watchAddr, serviceAppName, *serviceProcType, *serviceName, *watchHeartbeat)
+		go watcher.Run(done)
+		defer watcher.Close()
+	}
 
 	ln, err := net.Listen("tcp", ":"+strconv.Itoa(*port))
 	if err != nil {
-		log.Fatalf("net.Listen failed, error: %s.", err)
+		log.Fatalf("net.Listen() failed, error: %s.", err)
 	}
-
-	infoLogger.Printf("net.Listen()..., port: %d.", *port)
-
-	conns := make(chan net.Conn, MaxConnectionNum)
-	toCloseConns := make(chan net.Conn, 2*MaxConnectionNum)
-
 	defer func() {
-		// 停止监控 lainlet
-		watcher.Close(stopWatch)
-		<-watchDone
-
-		// 停止监听端口
 		if err = ln.Close(); err != nil {
-			errLogger.Printf("ln.Close() failed, error: %s.", err)
+			log.Errorf("ln.Close() failed, error: %s.", err)
 		}
-		stopProduceConns <- struct{}{}
-		<-produceConnsDone
-		<-consumeConnsDone
-		<-consumeToCloseConnsDone
-
-		Teardown()
-		infoLogger.Print("Shutdown gracefully.")
 	}()
+	log.Infof("net.Listen()..., port: %d.", *port)
 
-	go ProduceConns(ln, conns, toCloseConns, stopProduceConns, produceConnsDone)
-	go ConsumeConns(watcher, conns, toCloseConns, consumeConnsDone)
-	go ConsumeToCloseConns(toCloseConns, consumeToCloseConnsDone)
+	conns := accept(done, ln)
+	go handleConns(conns, watcher)
 
-	signal := <-quit
-	infoLogger.Printf("Receive a signal: %d, and accept() will shutdown gracefully...", signal)
+	<-quit
+	log.Infof("Shutting down...")
 }

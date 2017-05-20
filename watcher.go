@@ -10,6 +10,7 @@ import (
 
 	api "github.com/laincloud/lainlet/api/v2"
 	"github.com/laincloud/lainlet/client"
+	"github.com/laincloud/proxyd/log"
 )
 
 const retryInterval = 5 * time.Second
@@ -56,8 +57,8 @@ func newWatcher(addr, appName, procType, procName string, heartbeat int) *Watche
 }
 
 // Run 监听 lainlet 以更新 upstreams
-func (w *Watcher) Run(quit <-chan struct{}, done chan<- struct{}) {
-	infoLogger.Printf("Watcher.Run()..., watcherAddress: %s, serviceAppName: %s, serviceProcType: %s, serviceProcName: %s.",
+func (w *Watcher) Run(done <-chan struct{}) {
+	log.Infof("Watcher.Run()..., watcherAddress: %s, serviceAppName: %s, serviceProcType: %s, serviceProcName: %s.",
 		w.address, w.appName, w.procType, w.procName)
 
 	c := client.New(w.address)
@@ -67,42 +68,40 @@ func (w *Watcher) Run(quit <-chan struct{}, done chan<- struct{}) {
 	for running {
 		events, err := c.Watch(uri, w.ctx)
 		if err != nil {
-			errLogger.Printf("client.Watch() failed, error: %s.", err)
+			log.Errorf("client.Watch() failed, error: %s.", err)
 		}
 
-		infoLogger.Print("Connected to lainlet.")
+		log.Infof("Connected to lainlet.")
 
 		for event := range events {
 			w.handleEvent(event)
 		}
 
 		select {
-		case <-quit:
+		case <-done:
 			running = false
-			infoLogger.Print("Won't watch lainlet again.")
-		case <-time.Tick(retryInterval):
-			infoLogger.Print("Will watch lainlet again...")
+			log.Infof("Won't watch lainlet again.")
+			log.Infof("Watcher.Run() done.")
+			return
+		case <-time.After(retryInterval):
+			log.Infof("Will watch lainlet again...")
 		}
 	}
-
-	infoLogger.Print("Watcher.Run() done.")
-	done <- struct{}{}
 }
 
 // Close 关闭与 lainlet 的连接
-func (w *Watcher) Close(quit chan<- struct{}) {
-	quit <- struct{}{}
+func (w *Watcher) Close() {
 	w.cancel()
 }
 
 func (w *Watcher) handleEvent(event *client.Response) {
-	infoLogger.Printf("Receive an event, id: %d, event: %s", event.Id, event.Event)
+	log.Infof("Receive an event, id: %d, event: %s", event.Id, event.Event)
 	if event.Id != 0 {
 		if err := w.proxyData.Decode(event.Data); err != nil {
-			errLogger.Printf("proxyData.Decode failed, error: %s.", err)
+			log.Errorf("proxyData.Decode failed, error: %s.", err)
 		}
 
-		infoLogger.Printf("data: %+v.", w.proxyData.Data)
+		log.Infof("data: %+v.", w.proxyData.Data)
 		for k, v := range w.proxyData.Data {
 			if k == w.containerName {
 				w.updateUpstreams(v)
@@ -136,7 +135,7 @@ func (w *Watcher) updateUpstreams(procInfo api.ProcInfo) {
 		buf.WriteString(":")
 		buf.WriteString(strconv.Itoa(v.ContainerPort))
 		upstreams[i] = buf.String()
-		infoLogger.Printf("updateUpstreams..., index: %d, upstream: %s.", i, buf.String())
+		log.Infof("updateUpstreams..., index: %d, upstream: %s.", i, buf.String())
 	}
 
 	upstreamsLock.Lock()
