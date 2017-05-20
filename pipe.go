@@ -8,36 +8,36 @@ import (
 )
 
 // pipe 传输数据
-func pipe(clientConn net.Conn, upstreamConn net.Conn) {
-	clientAddr := clientConn.RemoteAddr()
-	upstreamAddr := upstreamConn.RemoteAddr()
-	log.Infof("pipe: %s <--> %s start...", clientAddr, upstreamAddr)
-
-	done := make(chan struct{}, 2)
-
+func pipe(clientConn net.Conn, upstreamConn net.Conn) <-chan net.Conn {
+	toCloseConns := make(chan net.Conn, 2)
 	go func() {
-		_copy(upstreamConn, clientConn)
-		done <- struct{}{}
+		defer close(toCloseConns)
+		clientAddr := clientConn.RemoteAddr()
+		upstreamAddr := upstreamConn.RemoteAddr()
+		log.Infof("pipe: %s <--> %s start...", clientAddr, upstreamAddr)
+
+		done := make(chan struct{}, 2)
+
+		go func() {
+			_copy(upstreamConn, clientConn)
+			done <- struct{}{}
+		}()
+
+		go func() {
+			_copy(clientConn, upstreamConn)
+			done <- struct{}{}
+		}()
+
+		<-done
+
+		toCloseConns <- clientConn
+		toCloseConns <- upstreamConn
+
+		<-done
+
+		log.Infof("pipe: %s <--> %s done.", clientAddr, upstreamAddr)
 	}()
-
-	go func() {
-		_copy(clientConn, upstreamConn)
-		done <- struct{}{}
-	}()
-
-	<-done
-
-	if err := clientConn.Close(); err != nil {
-		log.Errorf("clientConn.Close() failed, error: %s.", err)
-	}
-
-	if err := upstreamConn.Close(); err != nil {
-		log.Errorf("upstreamConn.Close() failed, error: %s.", err)
-	}
-
-	<-done
-
-	log.Infof("pipe: %s <--> %s done.", clientAddr, upstreamAddr)
+	return toCloseConns
 }
 
 func _copy(dst, src net.Conn) {

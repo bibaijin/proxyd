@@ -1,5 +1,5 @@
 {
-	"ImportPath": "github.com/laincloud/tcp-reverse-proxy",
+	"ImportPath": "github.com/laincloud/proxyd",
 	"GoVersion": "go1.8",
 	"GodepVersion": "v79",
 	"Deps": [

@@ -5,18 +5,18 @@ sleep 1s
 compare () {
     echo ""
     echo ">>>>>>>>>>>>>>>>>>>>"
-    echo "$1 > proxyd"
+    echo "$1 > no proxy"
     echo ">>>>>>>>>>>>>>>>>>>>"
-    netperf -t $1 -H proxyd -p 8080 -v 2 -- -P 12345,8081
+    netperf -t $1 -H netserver -p 12865 -v 2 -- -P 12345,8081
     echo "<<<<<<<<<<<<<<<<<<<<"
 
     sleep 10s
 
     echo ""
     echo ">>>>>>>>>>>>>>>>>>>>"
-    echo "$1 > no proxy"
+    echo "$1 > proxyd"
     echo ">>>>>>>>>>>>>>>>>>>>"
-    netperf -t $1 -H netserver -p 12865 -v 2 -- -P 12345,8081
+    netperf -t $1 -H proxyd -p 8080 -v 2 -- -P 12345,8081
     echo "<<<<<<<<<<<<<<<<<<<<"
 
     sleep 10s

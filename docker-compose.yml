@@ -24,8 +24,8 @@ services:
   proxyd:
     build:
       context: .
-      dockerfile: Dockerfile
-    image: bibaijin/proxyd:1.0.0
+      dockerfile: proxyd.Dockerfile
+    image: bibaijin/proxyd:1.1.0
     command: /test.sh
     expose:
       - "8080"  # for control connection

@@ -64,8 +64,7 @@ func (w *Watcher) Run(done <-chan struct{}) {
 	c := client.New(w.address)
 	uri := buildURI(w.proxyData, w.appName, w.heartbeat)
 
-	running := true
-	for running {
+	for {
 		events, err := c.Watch(uri, w.ctx)
 		if err != nil {
 			log.Errorf("client.Watch() failed, error: %s.", err)
@@ -79,8 +78,6 @@ func (w *Watcher) Run(done <-chan struct{}) {
 
 		select {
 		case <-done:
-			running = false
-			log.Infof("Won't watch lainlet again.")
 			log.Infof("Watcher.Run() done.")
 			return
 		case <-time.After(retryInterval):

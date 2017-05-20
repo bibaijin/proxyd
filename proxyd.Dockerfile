@@ -13,6 +13,7 @@ RUN cd benchmark/netperf-2.7.0 && ./configure && make && make install
 COPY Godeps Godeps
 COPY vendor vendor
 COPY *.go ./
+COPY log log
 RUN go install
 RUN ln -s $GOPATH/bin/proxyd /proxyd
 
