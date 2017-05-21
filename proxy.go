@@ -29,7 +29,6 @@ func accept(done <-chan struct{}, ln net.Listener) <-chan net.Conn {
 				log.Infof("accept() done.")
 				return
 			default:
-				log.Infof("Ready for another connection...")
 			}
 		}
 	}()
@@ -37,38 +36,57 @@ func accept(done <-chan struct{}, ln net.Listener) <-chan net.Conn {
 }
 
 func handleConns(conns <-chan net.Conn, watcher *Watcher) {
-	var wg sync.WaitGroup
-	for conn := range conns {
-		wg.Add(1)
+	toCloseConns := make(chan net.Conn, 2*MaxConnectionNum)
+	go func() {
+		defer close(toCloseConns)
+		var wg sync.WaitGroup
+		for conn := range conns {
+			wg.Add(1)
 
-		go func(conn net.Conn) {
-			defer wg.Done()
-			_handleConn(conn, watcher)
-		}(conn)
+			go func(conn net.Conn) {
+				defer wg.Done()
+				cs := _handleConn(conn, watcher)
+				for c := range cs {
+					toCloseConns <- c
+				}
+			}(conn)
+		}
+
+		wg.Wait()
+		log.Infof("handleConns() done.")
+	}()
+
+	for conn := range toCloseConns {
+		if err := conn.Close(); err != nil {
+			log.Errorf("conn.Close() failed, error: %s.", err)
+		}
 	}
-
-	wg.Wait()
-	log.Infof("handleConns() done.")
 }
 
-func _handleConn(conn net.Conn, watcher *Watcher) {
-	if err := conn.Close(); err != nil {
-		log.Errorf("conn.Close() failed, error: %s.", err)
-	}
+func _handleConn(conn net.Conn, watcher *Watcher) <-chan net.Conn {
+	toCloseConns := make(chan net.Conn, 2)
+	go func() {
+		defer close(toCloseConns)
+		upstream, err := watcher.Upstream()
+		if err != nil {
+			log.Errorf("watcher.Upstream() failed, error: %s.", err)
+			toCloseConns <- conn
+			return
+		}
 
-	upstream, err := watcher.Upstream()
-	if err != nil {
-		log.Errorf("watcher.Upstream() failed, error: %s.", err)
-		return
-	}
+		log.Infof("watcher.Upstream(), upstream: %s.", upstream)
 
-	log.Infof("watcher.Upstream(), upstream: %s.", upstream)
+		upstreamConn, err := net.Dial("tcp", upstream)
+		if err != nil {
+			log.Errorf("net.Dial() failed, error: %s.", err)
+			toCloseConns <- conn
+			return
+		}
 
-	upstreamConn, err := net.Dial("tcp", upstream)
-	if err != nil {
-		log.Errorf("net.Dial() failed, error: %s.", err)
-		return
-	}
-
-	pipe(conn, upstreamConn)
+		cs := pipe(conn, upstreamConn)
+		for c := range cs {
+			toCloseConns <- c
+		}
+	}()
+	return toCloseConns
 }
